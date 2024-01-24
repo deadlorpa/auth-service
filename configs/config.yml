@@ -2,9 +2,8 @@ port: "8000"
 
 migrations_path: "migrations"
 
-db_configs:
+db:
   username: "postgres"
-  password: "newpassword"
   host: "0.0.0.0"
   port: "5436"
   dbname: "postgres"
