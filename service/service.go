@@ -1,14 +1,16 @@
 package service
 
-import "github.com/deadlorpa/auth-app/repository"
-
-type Authorization interface {
-}
+import (
+	"github.com/deadlorpa/auth-app/interfaces"
+	"github.com/deadlorpa/auth-app/repository"
+)
 
 type Service struct {
-	Authorization
+	Authorization interfaces.AuthorizationService
 }
 
 func NewService(repositories *repository.Repository) *Service {
-	return &Service{}
+	return &Service{
+		Authorization: NewAuthService(repositories.Authorization),
+	}
 }
