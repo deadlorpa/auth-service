@@ -38,11 +38,13 @@ func (s *AuthService) CreateUser(user model.User) (string, error) {
 	return s.Authorization.CreateUser(user)
 }
 
-func (s *AuthService) GetToken(userSignIn model.UserSignIn) (string, error) {
+func (s *AuthService) SignIn(userSignIn model.UserSignInRequest) (responce model.UserSignInResponce, err error) {
+	var role model.Role
+
 	userSignIn.Password = generatePasswordHash(userSignIn.Password, s.config.SHASalt)
 	user, err := s.Authorization.GetUser(userSignIn)
 	if err != nil {
-		return "", err
+		return responce, err
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, &tokenClaims{
@@ -53,7 +55,17 @@ func (s *AuthService) GetToken(userSignIn model.UserSignIn) (string, error) {
 		user.Id,
 	})
 
-	return token.SignedString([]byte(s.config.JWTSigningKey))
+	role, err = s.Authorization.GetRole(user.IdRole)
+	if err != nil {
+		return responce, err
+	}
+
+	responce.Id = user.Id
+	responce.Username = user.Username
+	responce.Role = role
+	responce.Token, err = token.SignedString([]byte(s.config.JWTSigningKey))
+
+	return responce, err
 }
 
 func generatePasswordHash(password string, salt string) string {

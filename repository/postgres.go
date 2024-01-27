@@ -14,6 +14,7 @@ import (
 
 const (
 	usersTable = "users"
+	roleTable  = "roles"
 )
 
 func NewPostgresDB(cfg configs.DBConfig) (*sqlx.DB, error) {
