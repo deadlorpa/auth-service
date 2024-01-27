@@ -5,16 +5,11 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/deadlorpa/auth-app/configs"
 	"github.com/deadlorpa/auth-app/interfaces"
 	"github.com/deadlorpa/auth-app/model"
 	"github.com/dgrijalva/jwt-go"
-)
-
-// TODO: вынести конфиг
-const (
-	salt       = "hjqrhjqw124617ajfhajs"
-	signingKey = "qrkjk#4#%35FSFJlja#4353KSFjH"
-	tokenTTL   = 12 * time.Hour
+	"github.com/spf13/viper"
 )
 
 type tokenClaims struct {
@@ -23,20 +18,28 @@ type tokenClaims struct {
 }
 
 type AuthService struct {
+	config        configs.AuthConfig
 	Authorization interfaces.AuthorizationRepository
 }
 
 func NewAuthService(repository interfaces.AuthorizationRepository) *AuthService {
-	return &AuthService{Authorization: repository}
+	return &AuthService{
+		config: configs.AuthConfig{
+			SHASalt:       viper.GetString("auth.sha_salt"),
+			JWTSigningKey: viper.GetString("auth.jwt_signing_key"),
+			JWTTokenTTL:   viper.GetInt("auth.jwt_token_ttl"),
+		},
+		Authorization: repository,
+	}
 }
 
 func (s *AuthService) CreateUser(user model.User) (string, error) {
-	user.Password = generatePasswordHash(user.Password)
+	user.Password = generatePasswordHash(user.Password, s.config.SHASalt)
 	return s.Authorization.CreateUser(user)
 }
 
 func (s *AuthService) GetToken(userSignIn model.UserSignIn) (string, error) {
-	userSignIn.Password = generatePasswordHash(userSignIn.Password)
+	userSignIn.Password = generatePasswordHash(userSignIn.Password, s.config.SHASalt)
 	user, err := s.Authorization.GetUser(userSignIn)
 	if err != nil {
 		return "", err
@@ -44,16 +47,16 @@ func (s *AuthService) GetToken(userSignIn model.UserSignIn) (string, error) {
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, &tokenClaims{
 		jwt.StandardClaims{
-			ExpiresAt: time.Now().Add(tokenTTL).Unix(),
+			ExpiresAt: time.Now().Add(time.Duration(s.config.JWTTokenTTL) * time.Hour).Unix(),
 			IssuedAt:  time.Now().Unix(),
 		},
 		user.Id,
 	})
 
-	return token.SignedString([]byte(signingKey))
+	return token.SignedString([]byte(s.config.JWTSigningKey))
 }
 
-func generatePasswordHash(password string) string {
+func generatePasswordHash(password string, salt string) string {
 	hash := sha1.New()
 	hash.Write([]byte(password))
 

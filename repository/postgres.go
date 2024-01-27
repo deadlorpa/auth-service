@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/deadlorpa/auth-app/configs"
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
@@ -15,17 +16,7 @@ const (
 	usersTable = "users"
 )
 
-type Config struct {
-	Host           string
-	Port           string
-	Username       string
-	Password       string
-	DBName         string
-	SSLMode        string
-	MigrationsPath string
-}
-
-func NewPostgresDB(cfg Config) (*sqlx.DB, error) {
+func NewPostgresDB(cfg configs.DBConfig) (*sqlx.DB, error) {
 	db, err := sqlx.Open("postgres", fmt.Sprintf("host=%s port=%s user=%s dbname=%s password=%s sslmode=%s",
 		cfg.Host, cfg.Port, cfg.Username, cfg.DBName, cfg.Password, cfg.SSLMode))
 	if err != nil {
@@ -40,9 +31,9 @@ func NewPostgresDB(cfg Config) (*sqlx.DB, error) {
 	return db, nil
 }
 
-func MigrateDB(cfg Config) {
+func MigrateDB(cfg configs.DBConfig) {
 	if m, err := migrate.New(
-		fmt.Sprintf("file://%s", cfg.MigrationsPath),
+		"file://migrations",
 		fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=%s",
 			cfg.Username, cfg.Password, cfg.Host, cfg.Port, cfg.DBName, cfg.SSLMode)); err != nil {
 		log.Fatalf("!!! cannot migrate db: %s", err.Error())

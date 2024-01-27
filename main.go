@@ -2,14 +2,13 @@ package main
 
 import (
 	"log"
-	"os"
 
+	"github.com/deadlorpa/auth-app/configs"
 	"github.com/deadlorpa/auth-app/handler"
 	"github.com/deadlorpa/auth-app/model"
 	"github.com/deadlorpa/auth-app/repository"
 	"github.com/deadlorpa/auth-app/service"
 
-	"github.com/joho/godotenv"
 	"github.com/spf13/viper"
 )
 
@@ -18,23 +17,18 @@ func main() {
 		log.Fatalf("!!! cannot read configs: %s", err.Error())
 	}
 
-	if err := godotenv.Load(); err != nil {
-		log.Fatalf("!!! error loading env variables: %s", err.Error())
+	var dbCofig = configs.DBConfig{
+		Host:     viper.GetString("db.host"),
+		Port:     viper.GetString("db.port"),
+		Username: viper.GetString("db.username"),
+		DBName:   viper.GetString("db.dbname"),
+		SSLMode:  viper.GetString("db.sslmode"),
+		Password: viper.GetString("db.password"),
 	}
 
-	var cfg = repository.Config{
-		Host:           viper.GetString("db.host"),
-		Port:           viper.GetString("db.port"),
-		Username:       viper.GetString("db.username"),
-		DBName:         viper.GetString("db.dbname"),
-		SSLMode:        viper.GetString("db.sslmode"),
-		Password:       os.Getenv("DB_PASSWORD"),
-		MigrationsPath: viper.GetString("migrations_path"),
-	}
+	repository.MigrateDB(dbCofig)
 
-	repository.MigrateDB(cfg)
-
-	db, err := repository.NewPostgresDB(cfg)
+	db, err := repository.NewPostgresDB(dbCofig)
 	if err != nil {
 		log.Fatalf("!!! failed to initialize db: %s", err.Error())
 	}

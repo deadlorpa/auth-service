@@ -1,10 +1,14 @@
-port: "8000"
-
-migrations_path: "migrations"
+port: "{your port}"
 
 db:
-  username: "postgres"
-  host: "0.0.0.0"
-  port: "5436"
-  dbname: "postgres"
+  username: "{your username}"
+  host: "{your host}"
+  port: "{your port}"
+  dbname: "{your dbname}"
+  password: "{your password}"
   sslmode: "disable"
+
+auth:
+  sha_salt: "{your salt}"
+  jwt_signing_key: "{your key}"
+  jwt_token_ttl: "{your ttl in hours}"
