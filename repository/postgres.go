@@ -32,19 +32,25 @@ func NewPostgresDB(cfg configs.DBConfig) (*sqlx.DB, error) {
 	return db, nil
 }
 
-func MigrateDB(cfg configs.DBConfig) {
+func MigrateDB(cfg configs.DBConfig, method string) (err error) {
 	if m, err := migrate.New(
 		"file://migrations",
 		fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=%s",
 			cfg.Username, cfg.Password, cfg.Host, cfg.Port, cfg.DBName, cfg.SSLMode)); err != nil {
-		log.Fatalf("!!! cannot migrate db: %s", err.Error())
+		return err
 	} else {
-		if err = m.Up(); err != nil {
+		if method == "up" {
+			err = m.Up()
+		} else {
+			err = m.Down()
+		}
+		if err != nil {
 			if errors.Is(err, migrate.ErrNoChange) {
 				log.Printf("~~~ no migration changes")
 			} else {
-				log.Fatalf("!!! cannot migrate db: %s", err.Error())
+				return err
 			}
 		}
 	}
+	return nil
 }

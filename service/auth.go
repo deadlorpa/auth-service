@@ -9,7 +9,6 @@ import (
 	"github.com/deadlorpa/auth-app/interfaces"
 	"github.com/deadlorpa/auth-app/model"
 	"github.com/dgrijalva/jwt-go"
-	"github.com/spf13/viper"
 )
 
 type tokenClaims struct {
@@ -18,30 +17,33 @@ type tokenClaims struct {
 }
 
 type AuthService struct {
-	config        configs.AuthConfig
 	Authorization interfaces.AuthorizationRepository
 }
 
 func NewAuthService(repository interfaces.AuthorizationRepository) *AuthService {
 	return &AuthService{
-		config: configs.AuthConfig{
-			SHASalt:       viper.GetString("auth.sha_salt"),
-			JWTSigningKey: viper.GetString("auth.jwt_signing_key"),
-			JWTTokenTTL:   viper.GetInt("auth.jwt_token_ttl"),
-		},
 		Authorization: repository,
 	}
 }
 
-func (s *AuthService) CreateUser(user model.User) (string, error) {
-	user.Password = generatePasswordHash(user.Password, s.config.SHASalt)
+func (s *AuthService) CreateUser(user model.User) (id string, err error) {
+	config, err := configs.Get()
+	if err != nil {
+		return "", err
+	}
+	user.Password = generatePasswordHash(user.Password, config.AuthConfig.SHASalt)
 	return s.Authorization.CreateUser(user)
 }
 
 func (s *AuthService) SignIn(userSignIn model.UserSignInRequest) (responce model.UserSignInResponce, err error) {
 	var role model.Role
 
-	userSignIn.Password = generatePasswordHash(userSignIn.Password, s.config.SHASalt)
+	config, err := configs.Get()
+	if err != nil {
+		return responce, err
+	}
+
+	userSignIn.Password = generatePasswordHash(userSignIn.Password, config.AuthConfig.SHASalt)
 	user, err := s.Authorization.GetUser(userSignIn)
 	if err != nil {
 		return responce, err
@@ -49,7 +51,7 @@ func (s *AuthService) SignIn(userSignIn model.UserSignInRequest) (responce model
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, &tokenClaims{
 		jwt.StandardClaims{
-			ExpiresAt: time.Now().Add(time.Duration(s.config.JWTTokenTTL) * time.Hour).Unix(),
+			ExpiresAt: time.Now().Add(time.Duration(config.AuthConfig.JWTTokenTTL) * time.Hour).Unix(),
 			IssuedAt:  time.Now().Unix(),
 		},
 		user.Id,
@@ -63,7 +65,7 @@ func (s *AuthService) SignIn(userSignIn model.UserSignInRequest) (responce model
 	responce.Id = user.Id
 	responce.Username = user.Username
 	responce.Role = role
-	responce.Token, err = token.SignedString([]byte(s.config.JWTSigningKey))
+	responce.Token, err = token.SignedString([]byte(config.AuthConfig.JWTSigningKey))
 
 	return responce, err
 }

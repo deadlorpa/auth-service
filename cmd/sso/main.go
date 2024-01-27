@@ -13,22 +13,12 @@ import (
 )
 
 func main() {
-	if err := InitConfig(); err != nil {
+	config, err := configs.Get()
+	if err != nil {
 		log.Fatalf("!!! cannot read configs: %s", err.Error())
 	}
 
-	var dbCofig = configs.DBConfig{
-		Host:     viper.GetString("db.host"),
-		Port:     viper.GetString("db.port"),
-		Username: viper.GetString("db.username"),
-		DBName:   viper.GetString("db.dbname"),
-		SSLMode:  viper.GetString("db.sslmode"),
-		Password: viper.GetString("db.password"),
-	}
-
-	repository.MigrateDB(dbCofig)
-
-	db, err := repository.NewPostgresDB(dbCofig)
+	db, err := repository.NewPostgresDB(config.DBConfig)
 	if err != nil {
 		log.Fatalf("!!! failed to initialize db: %s", err.Error())
 	}
@@ -41,10 +31,4 @@ func main() {
 	if err := srv.Run(viper.GetString("port"), handlers.InitRoutes()); err != nil {
 		log.Fatalf("!!! cannot start server, err: %s", err.Error())
 	}
-}
-
-func InitConfig() error {
-	viper.AddConfigPath("configs")
-	viper.SetConfigName("config")
-	return viper.ReadInConfig()
 }
