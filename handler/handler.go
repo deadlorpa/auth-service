@@ -18,10 +18,13 @@ func (h *Handler) InitRoutes() *gin.Engine {
 
 	router.GET("/health", h.health)
 
-	auth := router.Group("/auth")
+	version := router.Group("/v1")
 	{
-		auth.POST("/sign-up", h.signUp)
-		auth.POST("/sign-in", h.signIn)
+		auth := version.Group("/auth")
+		{
+			auth.POST("/sign-up", h.signUp)
+			auth.POST("/sign-in", h.signIn)
+		}
 	}
 
 	return router

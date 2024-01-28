@@ -4,7 +4,7 @@ import (
 	"flag"
 	"log"
 
-	"github.com/deadlorpa/auth-app/configs"
+	"github.com/deadlorpa/auth-app/appconfig"
 	"github.com/deadlorpa/auth-app/repository"
 )
 
@@ -13,7 +13,7 @@ func main() {
 	flag.StringVar(&method, "m", "up", "Specify migration method. Default is up")
 	flag.Parse()
 
-	config, err := configs.Get()
+	config, err := appconfig.Get()
 	if err != nil {
 		log.Fatalf("!!! cannot read configs: %s", err.Error())
 	}

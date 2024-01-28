@@ -1,4 +1,4 @@
-package configs
+package appconfig
 
 import (
 	"github.com/spf13/viper"
@@ -20,6 +20,7 @@ type AuthConfig struct {
 }
 
 type FullConfig struct {
+	Host       string
 	DBConfig   DBConfig
 	AuthConfig AuthConfig
 }
@@ -32,6 +33,7 @@ func Get() (config *FullConfig, err error) {
 			return config, err
 		}
 		config = new(FullConfig)
+		config.Host = viper.GetString("port")
 		config.DBConfig = DBConfig{
 			Host:     viper.GetString("db.host"),
 			Port:     viper.GetString("db.port"),
@@ -51,7 +53,7 @@ func Get() (config *FullConfig, err error) {
 }
 
 func initConfigFile() error {
-	viper.AddConfigPath("configs")
-	viper.SetConfigName("config")
+	viper.AddConfigPath("appconfig")
+	viper.SetConfigName("appconfig")
 	return viper.ReadInConfig()
 }

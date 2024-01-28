@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/deadlorpa/auth-app/configs"
+	"github.com/deadlorpa/auth-app/appconfig"
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
@@ -17,7 +17,7 @@ const (
 	roleTable  = "roles"
 )
 
-func NewPostgresDB(cfg configs.DBConfig) (*sqlx.DB, error) {
+func NewPostgresDB(cfg appconfig.DBConfig) (*sqlx.DB, error) {
 	db, err := sqlx.Open("postgres", fmt.Sprintf("host=%s port=%s user=%s dbname=%s password=%s sslmode=%s",
 		cfg.Host, cfg.Port, cfg.Username, cfg.DBName, cfg.Password, cfg.SSLMode))
 	if err != nil {
@@ -32,7 +32,7 @@ func NewPostgresDB(cfg configs.DBConfig) (*sqlx.DB, error) {
 	return db, nil
 }
 
-func MigrateDB(cfg configs.DBConfig, method string) (err error) {
+func MigrateDB(cfg appconfig.DBConfig, method string) (err error) {
 	if m, err := migrate.New(
 		"file://migrations",
 		fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=%s",

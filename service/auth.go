@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/deadlorpa/auth-app/configs"
+	"github.com/deadlorpa/auth-app/appconfig"
 	"github.com/deadlorpa/auth-app/interfaces"
 	"github.com/deadlorpa/auth-app/model"
 	"github.com/dgrijalva/jwt-go"
@@ -27,7 +27,7 @@ func NewAuthService(repository interfaces.AuthorizationRepository) *AuthService 
 }
 
 func (s *AuthService) CreateUser(user model.User) (id string, err error) {
-	config, err := configs.Get()
+	config, err := appconfig.Get()
 	if err != nil {
 		return "", err
 	}
@@ -38,7 +38,7 @@ func (s *AuthService) CreateUser(user model.User) (id string, err error) {
 func (s *AuthService) SignIn(userSignIn model.UserSignInRequest) (responce model.UserSignInResponce, err error) {
 	var role model.Role
 
-	config, err := configs.Get()
+	config, err := appconfig.Get()
 	if err != nil {
 		return responce, err
 	}
