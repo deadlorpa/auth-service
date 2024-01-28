@@ -6,11 +6,13 @@ import (
 )
 
 type Repository struct {
-	Authorization interfaces.AuthorizationRepository
+	Users interfaces.UsersRepository
+	Roles interfaces.RolesRepository
 }
 
 func NewRepository(db *sqlx.DB) *Repository {
 	return &Repository{
-		Authorization: NewAuthRepository(db),
+		Users: NewUsersRepository(db),
+		Roles: NewRolesRepository(db),
 	}
 }

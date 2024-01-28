@@ -17,22 +17,24 @@ type tokenClaims struct {
 }
 
 type AuthService struct {
-	Authorization interfaces.AuthorizationRepository
+	Users interfaces.UsersRepository
+	Roles interfaces.RolesRepository
 }
 
-func NewAuthService(repository interfaces.AuthorizationRepository) *AuthService {
+func NewAuthService(users interfaces.UsersRepository, roles interfaces.RolesRepository) *AuthService {
 	return &AuthService{
-		Authorization: repository,
+		Users: users,
+		Roles: roles,
 	}
 }
 
-func (s *AuthService) CreateUser(user model.User) (id string, err error) {
+func (s *AuthService) SignUp(user model.User) (id string, err error) {
 	config, err := appconfig.Get()
 	if err != nil {
 		return "", err
 	}
 	user.Password = generatePasswordHash(user.Password, config.AuthConfig.SHASalt)
-	return s.Authorization.CreateUser(user)
+	return s.Users.Create(user)
 }
 
 func (s *AuthService) SignIn(userSignIn model.UserSignInRequest) (responce model.UserSignInResponce, err error) {
@@ -44,7 +46,7 @@ func (s *AuthService) SignIn(userSignIn model.UserSignInRequest) (responce model
 	}
 
 	userSignIn.Password = generatePasswordHash(userSignIn.Password, config.AuthConfig.SHASalt)
-	user, err := s.Authorization.GetUser(userSignIn)
+	user, err := s.Users.GetBySignIn(userSignIn)
 	if err != nil {
 		return responce, err
 	}
@@ -57,7 +59,7 @@ func (s *AuthService) SignIn(userSignIn model.UserSignInRequest) (responce model
 		user.Id,
 	})
 
-	role, err = s.Authorization.GetRole(user.IdRole)
+	role, err = s.Roles.GetById(user.IdRole)
 	if err != nil {
 		return responce, err
 	}
